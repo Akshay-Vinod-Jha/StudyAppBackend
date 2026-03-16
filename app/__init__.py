@@ -14,10 +14,20 @@ def create_app():
     # Disable strict slashes to prevent redirects
     app.url_map.strict_slashes = False
     
+    # Build regex pattern to allow all vercel.app subdomains + explicit origins
+    import re
+    _allowed = set(o.lower() for o in Config.CORS_ORIGINS)
+    _vercel_re = re.compile(r'^https://[\w-]+\.vercel\.app$')
+
+    def _origin_check(origin):
+        if not origin:
+            return False
+        return origin.lower() in _allowed or bool(_vercel_re.match(origin))
+
     # Enable CORS
     CORS(app, resources={
         r"/api/*": {
-            "origins": Config.CORS_ORIGINS,
+            "origins": _origin_check,
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"],
             "supports_credentials": True

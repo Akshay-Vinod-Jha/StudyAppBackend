@@ -27,9 +27,8 @@ class Config:
         'http://127.0.0.1:5500',
         'http://localhost:5500',
         'http://localhost:5173',
-        # Add your Vercel frontend URL here (will be auto-deployed)
-        'https://*.vercel.app',
+        'https://study-app-frontend-psi.vercel.app',  # Production Vercel frontend
     ]
-    # Allow CORS via environment variable for production
+    # Allow extra origins via ALLOWED_ORIGINS env var (comma-separated)
     if os.getenv('ALLOWED_ORIGINS'):
-        CORS_ORIGINS.extend(os.getenv('ALLOWED_ORIGINS', '').split(','))
+        CORS_ORIGINS.extend([o.strip() for o in os.getenv('ALLOWED_ORIGINS', '').split(',') if o.strip()])
