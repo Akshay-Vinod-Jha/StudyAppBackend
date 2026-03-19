@@ -8,8 +8,15 @@ from groq import Groq
 
 chatbot_bp = Blueprint('chatbot', __name__, url_prefix='/api/chatbot')
 
-# Initialize Groq client
-groq_client = Groq(api_key=Config.GROQ_API_KEY)
+# Lazy-initialize Groq client to avoid compatibility issues
+_groq_client = None
+
+def get_groq_client():
+    """Lazy-initialize and return Groq client"""
+    global _groq_client
+    if _groq_client is None and Config.GROQ_API_KEY:
+        _groq_client = Groq(api_key=Config.GROQ_API_KEY)
+    return _groq_client
 
 def get_user_from_token():
     """Helper to get user_id from token"""
@@ -62,6 +69,10 @@ def chat():
         })
         
         # Call Groq API
+        groq_client = get_groq_client()
+        if not groq_client:
+            return jsonify({'error': 'Groq API not configured'}), 503
+        
         response = groq_client.chat.completions.create(
             model="mixtral-8x7b-32768",  # Free model available on Groq
             messages=messages,
