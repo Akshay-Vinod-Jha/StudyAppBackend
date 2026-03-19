@@ -47,6 +47,12 @@ def chat():
         # Get conversation history if provided
         conversation_history = data.get('history', [])
         
+        # Check API key
+        groq_client = get_groq_client()
+        if not groq_client:
+            print("ERROR: Groq API key not configured")
+            return jsonify({'error': 'Groq API not configured'}), 503
+        
         # Build messages for the API
         messages = []
         
@@ -68,13 +74,12 @@ def chat():
             "content": user_message
         })
         
-        # Call Groq API
-        groq_client = get_groq_client()
-        if not groq_client:
-            return jsonify({'error': 'Groq API not configured'}), 503
+        print(f"DEBUG: Sending {len(messages)} messages to Groq")
+        print(f"DEBUG: Using model: mixtral-8x7b-32768")
         
+        # Call Groq API
         response = groq_client.chat.completions.create(
-            model="mixtral-8x7b-32768",  # Free model available on Groq
+            model="mixtral-8x7b-32768",
             messages=messages,
             max_tokens=1024,
             temperature=0.7,
@@ -82,15 +87,24 @@ def chat():
         
         bot_response = response.choices[0].message.content
         
+        print(f"DEBUG: Chatbot response generated successfully")
+        
         return jsonify({
             'message': user_message,
             'response': bot_response,
-            'timestamp': None  # Can be added if needed
+            'timestamp': None
         }), 200
         
     except Exception as e:
-        print(f"Chatbot error: {str(e)}")
-        return jsonify({'error': f'Chatbot error: {str(e)}'}), 500
+        import traceback
+        error_msg = str(e)
+        traceback_str = traceback.format_exc()
+        print(f"ERROR in chatbot: {error_msg}")
+        print(f"TRACEBACK: {traceback_str}")
+        return jsonify({
+            'error': f'Chatbot error: {error_msg}',
+            'details': traceback_str
+        }), 500
 
 
 @chatbot_bp.route('/health', methods=['GET'])
