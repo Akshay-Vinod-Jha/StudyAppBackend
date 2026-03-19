@@ -2,10 +2,9 @@
 flask==3.0.0
 flask-cors==4.0.0
 
-# MongoDB - Pin versions for Python 3.13 compatibility
-pymongo==4.6.1
-dnspython==2.4.2
-httpcore==1.0.9
+# MongoDB
+pymongo>=4.5.0
+dnspython>=2.3.0
 
 # Environment Variables
 python-dotenv==1.0.0
@@ -23,5 +22,4 @@ python-dateutil==2.8.2
 gunicorn==22.0.0
 
 # Groq API for Chatbot
-groq==0.7.0
-httpx==0.24.1
+groq>=0.7.0
