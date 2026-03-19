@@ -4,7 +4,6 @@ Chatbot Routes using Groq API
 from flask import Blueprint, request, jsonify
 from app.config import Config
 from app.utils.helpers import verify_token
-from groq import Groq
 
 chatbot_bp = Blueprint('chatbot', __name__, url_prefix='/api/chatbot')
 
@@ -14,8 +13,19 @@ _groq_client = None
 def get_groq_client():
     """Lazy-initialize and return Groq client"""
     global _groq_client
-    if _groq_client is None and Config.GROQ_API_KEY:
-        _groq_client = Groq(api_key=Config.GROQ_API_KEY)
+    if _groq_client is None:
+        if not Config.GROQ_API_KEY:
+            print("ERROR: GROQ_API_KEY not configured")
+            return None
+        
+        try:
+            from groq import Groq
+            _groq_client = Groq(api_key=Config.GROQ_API_KEY)
+            print("DEBUG: Groq client initialized successfully")
+        except Exception as e:
+            print(f"ERROR initializing Groq client: {str(e)}")
+            return None
+    
     return _groq_client
 
 def get_user_from_token():
@@ -77,23 +87,33 @@ def chat():
         print(f"DEBUG: Sending {len(messages)} messages to Groq")
         print(f"DEBUG: Using model: mixtral-8x7b-32768")
         
-        # Call Groq API
-        response = groq_client.chat.completions.create(
-            model="mixtral-8x7b-32768",
-            messages=messages,
-            max_tokens=1024,
-            temperature=0.7,
-        )
+        # Call Groq API with error handling
+        try:
+            response = groq_client.chat.completions.create(
+                model="mixtral-8x7b-32768",
+                messages=messages,
+                max_tokens=1024,
+                temperature=0.7,
+            )
+            
+            bot_response = response.choices[0].message.content
+            
+            print(f"DEBUG: Chatbot response generated successfully")
+            
+            return jsonify({
+                'message': user_message,
+                'response': bot_response,
+                'timestamp': None
+            }), 200
         
-        bot_response = response.choices[0].message.content
-        
-        print(f"DEBUG: Chatbot response generated successfully")
-        
-        return jsonify({
-            'message': user_message,
-            'response': bot_response,
-            'timestamp': None
-        }), 200
+        except Exception as groq_err:
+            groq_error_msg = str(groq_err)
+            print(f"ERROR calling Groq API: {groq_error_msg}")
+            import traceback
+            print(traceback.format_exc())
+            return jsonify({
+                'error': f'Groq API error: {groq_error_msg}'
+            }), 503
         
     except Exception as e:
         import traceback
@@ -101,9 +121,11 @@ def chat():
         traceback_str = traceback.format_exc()
         print(f"ERROR in chatbot: {error_msg}")
         print(f"TRACEBACK: {traceback_str}")
+        
+        # Return user-friendly error
         return jsonify({
-            'error': f'Chatbot error: {error_msg}',
-            'details': traceback_str
+            'error': 'An unexpected error occurred. The chatbot service may be temporarily unavailable.',
+            'details': error_msg
         }), 500
 
 
