@@ -85,12 +85,12 @@ def chat():
         })
         
         print(f"DEBUG: Sending {len(messages)} messages to Groq")
-        print(f"DEBUG: Using model: mixtral-8x7b-32768")
+        print(f"DEBUG: Using model: llama-3.1-70b-versatile")
         
         # Call Groq API with error handling
         try:
             response = groq_client.chat.completions.create(
-                model="mixtral-8x7b-32768",
+                model="llama-3.1-70b-versatile",
                 messages=messages,
                 max_tokens=1024,
                 temperature=0.7,
