@@ -32,12 +32,14 @@ def create_app():
     from app.routes.notes import notes_bp
     from app.routes.study_logs import study_logs_bp
     from app.routes.analytics import analytics_bp
+    from app.routes.chatbot import chatbot_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(subjects_bp)
     app.register_blueprint(notes_bp)
     app.register_blueprint(study_logs_bp)
     app.register_blueprint(analytics_bp)
+    app.register_blueprint(chatbot_bp)
     
     # Health check route
     @app.route('/health', methods=['GET'])
@@ -55,7 +57,9 @@ def create_app():
                 '/api/subjects',
                 '/api/notes',
                 '/api/study-logs',
-                '/api/analytics'
+                '/api/analytics',
+                '/api/chatbot/chat',
+                '/api/chatbot/health'
             ]
         }, 200
     

@@ -20,6 +20,9 @@ class Config:
     # JWT Configuration
     JWT_EXPIRATION_HOURS = 24
     
+    # Groq API Configuration
+    GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+    
     # CORS Configuration - includes local dev, Vercel frontend, and any custom domain
     CORS_ORIGINS = [
         'http://localhost:3000',
